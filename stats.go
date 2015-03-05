@@ -9,11 +9,20 @@ import (
 )
 
 type StatsMiddleware struct {
-	lock              sync.RWMutex
-	start             time.Time
-	pid               int
-	responseCounts    map[string]int
-	totalResponseTime time.Time
+	Lock              sync.RWMutex
+	Start             time.Time
+	Pid               int
+	ResponseCounts    map[string]int
+	TotalResponseTime time.Time
+}
+
+func New() *StatsMiddleware {
+	return &StatsMiddleware{
+		Start:             time.Now(),
+		Pid:               os.Getpid(),
+		ResponseCounts:    map[string]int{},
+		TotalResponseTime: time.Time{},
+	}
 }
 
 type recorderResponseWriter struct {
@@ -28,12 +37,6 @@ func (w *recorderResponseWriter) WriteHeader(code int) {
 
 // MiddlewareFunc makes StatsMiddleware implement the Middleware interface.
 func (mw *StatsMiddleware) Handler(h http.Handler) http.Handler {
-
-	mw.start = time.Now()
-	mw.pid = os.Getpid()
-	mw.responseCounts = map[string]int{}
-	mw.totalResponseTime = time.Time{}
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -47,11 +50,12 @@ func (mw *StatsMiddleware) Handler(h http.Handler) http.Handler {
 
 		statusCode := writer.statusCode
 
-		mw.lock.Lock()
-		mw.responseCounts[fmt.Sprintf("%d", statusCode)]++
+		mw.Lock.Lock()
 
-		mw.totalResponseTime = mw.totalResponseTime.Add(responseTime)
-		mw.lock.Unlock()
+		mw.ResponseCounts[fmt.Sprintf("%d", statusCode)]++
+		mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
+
+		mw.Lock.Unlock()
 	})
 }
 
@@ -71,18 +75,18 @@ type Stats struct {
 
 func (mw *StatsMiddleware) GetStats() *Stats {
 
-	mw.lock.RLock()
+	mw.Lock.RLock()
 
 	now := time.Now()
 
-	uptime := now.Sub(mw.start)
+	uptime := now.Sub(mw.Start)
 
 	totalCount := 0
-	for _, count := range mw.responseCounts {
+	for _, count := range mw.ResponseCounts {
 		totalCount += count
 	}
 
-	totalResponseTime := mw.totalResponseTime.Sub(time.Time{})
+	totalResponseTime := mw.TotalResponseTime.Sub(time.Time{})
 
 	averageResponseTime := time.Duration(0)
 	if totalCount > 0 {
@@ -91,12 +95,12 @@ func (mw *StatsMiddleware) GetStats() *Stats {
 	}
 
 	stats := &Stats{
-		Pid:                    mw.pid,
+		Pid:                    mw.Pid,
 		UpTime:                 uptime.String(),
 		UpTimeSec:              uptime.Seconds(),
 		Time:                   now.String(),
 		TimeUnix:               now.Unix(),
-		StatusCodeCount:        mw.responseCounts,
+		StatusCodeCount:        mw.ResponseCounts,
 		TotalCount:             totalCount,
 		TotalResponseTime:      totalResponseTime.String(),
 		TotalResponseTimeSec:   totalResponseTime.Seconds(),
@@ -104,7 +108,7 @@ func (mw *StatsMiddleware) GetStats() *Stats {
 		AverageResponseTimeSec: averageResponseTime.Seconds(),
 	}
 
-	mw.lock.RUnlock()
+	mw.Lock.RUnlock()
 
 	return stats
 }
