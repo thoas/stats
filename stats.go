@@ -44,19 +44,34 @@ func (mw *StatsMiddleware) Handler(h http.Handler) http.Handler {
 
 		h.ServeHTTP(writer, r)
 
-		end := time.Now()
-
-		responseTime := end.Sub(start)
-
-		statusCode := writer.statusCode
-
-		mw.Lock.Lock()
-
-		mw.ResponseCounts[fmt.Sprintf("%d", statusCode)]++
-		mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
-
-		mw.Lock.Unlock()
+		mw.handleWriter(start, writer)
 	})
+}
+
+// Negroni compatible interface
+func (mw *StatsMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	start := time.Now()
+
+	writer := &recorderResponseWriter{w, 0}
+
+	next(writer, r)
+
+	mw.handleWriter(start, writer)
+}
+
+func (mw *StatsMiddleware) handleWriter(start time.Time, writer *recorderResponseWriter) {
+	end := time.Now()
+
+	responseTime := end.Sub(start)
+
+	statusCode := writer.statusCode
+
+	mw.Lock.Lock()
+
+	defer mw.Lock.Unlock()
+
+	mw.ResponseCounts[fmt.Sprintf("%d", statusCode)]++
+	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
 }
 
 type Stats struct {
