@@ -27,12 +27,12 @@ func New() *StatsMiddleware {
 
 type recorderResponseWriter struct {
 	http.ResponseWriter
-	statusCode int
+	StatusCode int
 }
 
 func (w *recorderResponseWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
-	w.statusCode = code
+	w.StatusCode = code
 }
 
 // MiddlewareFunc makes StatsMiddleware implement the Middleware interface.
@@ -64,13 +64,11 @@ func (mw *StatsMiddleware) handleWriter(start time.Time, writer *recorderRespons
 
 	responseTime := end.Sub(start)
 
-	statusCode := writer.statusCode
-
 	mw.Lock.Lock()
 
 	defer mw.Lock.Unlock()
 
-	mw.ResponseCounts[fmt.Sprintf("%d", statusCode)]++
+	mw.ResponseCounts[fmt.Sprintf("%d", writer.StatusCode)]++
 	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
 }
 
