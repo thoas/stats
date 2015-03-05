@@ -16,6 +16,16 @@ Installation
 
     go get github.com/thoas/stats
 
+5. Run your server:
+
+.. code-block:: go
+
+    package main
+
+    func main() {
+        // :)
+    }
+
 Usage
 -----
 
@@ -25,7 +35,7 @@ Inspiration
 -----------
 
 This reusable handler comes from a complete rip off of the great StatusMiddleware_
-which is brought by the awesome `go-json-rest`_
+which comes from the awesome `go-json-rest`_.
 
 .. _GOPATH: http://golang.org/doc/code.html#GOPATH
 .. _StatusMiddleware: https://github.com/ant0ine/go-json-rest/blob/master/rest/status.go
