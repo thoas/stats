@@ -43,7 +43,7 @@ Usage
 Negroni
 .......
 
-If you are using negroni_ you can implement the handler as middleware:
+If you are using negroni_ you can implement the handler as a simple middleware:
 
 .. code-block:: go
 
