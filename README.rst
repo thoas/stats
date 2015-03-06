@@ -137,6 +137,8 @@ Inspiration
 This reusable handler comes from a complete rip off of the great StatusMiddleware_
 which is located in the `go-json-rest`_ repository.
 
+Thanks to `Antoine Imbert <https://github.com/ant0ine>`_ for his work.
+
 .. _GOPATH: http://golang.org/doc/code.html#GOPATH
 .. _StatusMiddleware: https://github.com/ant0ine/go-json-rest/blob/master/rest/status.go
 .. _go-json-rest: https://github.com/ant0ine/go-json-rest
