@@ -105,7 +105,7 @@ Except the following result:
 .. code-block:: json
 
     {
-        "TotalResponseTime": "1.907382ms",
+        "total_response_time": "1.907382ms",
         "average_response_time": "86.699\u00b5s",
         "average_response_time_sec": 8.6699e-05,
         "count": 1,

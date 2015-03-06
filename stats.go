@@ -103,7 +103,7 @@ type Stats struct {
 	TotalStatusCodeCount   map[string]int `json:"total_status_code_count"`
 	Count                  int            `json:"count"`
 	TotalCount             int            `json:"total_count"`
-	TotalResponseTime      string         `json""total_response_time`
+	TotalResponseTime      string         `json:"total_response_time`
 	TotalResponseTimeSec   float64        `json:"total_response_time_sec"`
 	AverageResponseTime    string         `json:"average_response_time"`
 	AverageResponseTimeSec float64        `json:"average_response_time_sec"`
