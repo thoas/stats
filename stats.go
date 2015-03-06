@@ -26,18 +26,21 @@ func New() *StatsMiddleware {
 		TotalResponseTime:   time.Time{},
 	}
 
-	ticker := time.NewTicker(time.Second)
 	go func() {
-		for _ = range ticker.C {
-			stats.Lock.Lock()
+		for {
+			stats.ResetResponseCounts()
 
-			stats.ResponseCounts = map[string]int{}
-
-			defer stats.Lock.Unlock()
+			time.Sleep(time.Second * 1)
 		}
 	}()
 
 	return stats
+}
+
+func (mw *StatsMiddleware) ResetResponseCounts() {
+	mw.Lock.Lock()
+	defer mw.Lock.Unlock()
+	mw.ResponseCounts = map[string]int{}
 }
 
 type recorderResponseWriter struct {
@@ -67,7 +70,7 @@ func (mw *StatsMiddleware) Handler(h http.Handler) http.Handler {
 func (mw *StatsMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	start := time.Now()
 
-	writer := &recorderResponseWriter{w, 0}
+	writer := &recorderResponseWriter{w, 200}
 
 	next(writer, r)
 
