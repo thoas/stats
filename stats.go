@@ -94,19 +94,19 @@ func (mw *StatsMiddleware) handleWriter(start time.Time, writer *recorderRespons
 }
 
 type Stats struct {
-	Pid                    int            `json: "pid"`
-	UpTime                 string         `json: "uptime"`
-	UpTimeSec              float64        `json: "uptime_sec"`
-	Time                   string         `json: "time"`
-	TimeUnix               int64          `json: "unixtime"`
-	StatusCodeCount        map[string]int `json: "status_code_count"`
-	TotalStatusCodeCount   map[string]int `json: "total_status_code_count"`
-	Count                  int            `json: "count"`
-	TotalCount             int            `json: "total_count"`
-	TotalResponseTime      string         `json" "total_response_time`
-	TotalResponseTimeSec   float64        `json: "total_response_time_sec"`
-	AverageResponseTime    string         `json: "average_response_time"`
-	AverageResponseTimeSec float64        `json: "average_response_time_sec"`
+	Pid                    int            `json:"pid"`
+	UpTime                 string         `json:"uptime"`
+	UpTimeSec              float64        `json:"uptime_sec"`
+	Time                   string         `json:"time"`
+	TimeUnix               int64          `json:"unixtime"`
+	StatusCodeCount        map[string]int `json:"status_code_count"`
+	TotalStatusCodeCount   map[string]int `json:"total_status_code_count"`
+	Count                  int            `json:"count"`
+	TotalCount             int            `json:"total_count"`
+	TotalResponseTime      string         `json""total_response_time`
+	TotalResponseTimeSec   float64        `json:"total_response_time_sec"`
+	AverageResponseTime    string         `json:"average_response_time"`
+	AverageResponseTimeSec float64        `json:"average_response_time_sec"`
 }
 
 func (mw *StatsMiddleware) GetStats() *Stats {

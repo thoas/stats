@@ -49,7 +49,7 @@ Negroni
 .......
 
 If you are using negroni_ you can implement the handler as
-a simple middleware:
+a simple middleware in ``server.go``:
 
 .. code-block:: go
 
@@ -88,7 +88,48 @@ a simple middleware:
         n.Run(":3000")
     }
 
-See `examples <https://github.com/thoas/stats/blob/master/examples>`_.
+Run it in a shell:
+
+::
+
+    $ go run server.go
+
+Then in another shell run:
+
+::
+
+    $ curl http://localhost:3000/stats | python -m "json.tool"
+
+Except the following result:
+
+.. code-block:: json
+
+    {
+        "TotalResponseTime": "1.907382ms",
+        "average_response_time": "86.699\u00b5s",
+        "average_response_time_sec": 8.6699e-05,
+        "count": 1,
+        "pid": 99894,
+        "status_code_count": {
+            "200": 1
+        },
+        "time": "2015-03-06 17:23:27.000677896 +0100 CET",
+        "total_count": 22,
+        "total_response_time_sec": 0.0019073820000000002,
+        "total_status_code_count": {
+            "200": 22
+        },
+        "unixtime": 1425659007,
+        "uptime": "4m14.502271612s",
+        "uptime_sec": 254.502271612
+    }
+
+
+
+See `examples <https://github.com/thoas/stats/blob/master/examples>`_ to
+test them.
+
+
 
 Inspiration
 -----------
