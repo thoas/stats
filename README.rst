@@ -40,7 +40,47 @@ Installation
 Usage
 -----
 
-...
+Negroni
+.......
+
+If you are using negroni_ you can implement the handler as middleware:
+
+.. code-block:: go
+
+    package main
+
+    import (
+        "net/http"
+        "github.com/codegangsta/negroni"
+        "github.com/thoas/stats"
+        "encoding/json"
+    )
+
+    func main() {
+        middleware := stats.New()
+
+        mux := http.NewServeMux()
+
+        mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("Content-Type", "application/json")
+            w.Write([]byte("{\"hello\": \"world\"}"))
+        })
+
+        mux.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("Content-Type", "application/json")
+
+            stats := middleware.GetStats()
+
+            b, _ := json.Marshal(stats)
+
+            w.Write(b)
+        })
+
+        n := negroni.Classic()
+        n.Use(middleware)
+        n.UseHandler(mux)
+        n.Run(":3000")
+    }
 
 Inspiration
 -----------
@@ -51,3 +91,4 @@ which comes from the awesome `go-json-rest`_.
 .. _GOPATH: http://golang.org/doc/code.html#GOPATH
 .. _StatusMiddleware: https://github.com/ant0ine/go-json-rest/blob/master/rest/status.go
 .. _go-json-rest: https://github.com/ant0ine/go-json-rest
+.. _negroni: https://github.com/codegangsta/negroni
