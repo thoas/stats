@@ -97,6 +97,7 @@ type Stats struct {
 	Time                   string         `json: "time"`
 	TimeUnix               int64          `json: "unixtime"`
 	StatusCodeCount        map[string]int `json: "status_code_count"`
+	TotalStatusCodeCount   map[string]int `json: "total_status_code_count"`
 	Count                  int            `json: "count"`
 	TotalCount             int            `json: "total_count"`
 	TotalResponseTime      string         `json" "total_response_time`
@@ -137,7 +138,8 @@ func (mw *StatsMiddleware) GetStats() *Stats {
 		UpTimeSec:              uptime.Seconds(),
 		Time:                   now.String(),
 		TimeUnix:               now.Unix(),
-		StatusCodeCount:        mw.TotalResponseCounts,
+		StatusCodeCount:        mw.ResponseCounts,
+		TotalStatusCodeCount:   mw.TotalResponseCounts,
 		Count:                  count,
 		TotalCount:             totalCount,
 		TotalResponseTime:      totalResponseTime.String(),
