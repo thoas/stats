@@ -9,20 +9,35 @@ import (
 )
 
 type StatsMiddleware struct {
-	Lock              sync.RWMutex
-	Start             time.Time
-	Pid               int
-	ResponseCounts    map[string]int
-	TotalResponseTime time.Time
+	Lock                sync.RWMutex
+	Start               time.Time
+	Pid                 int
+	ResponseCounts      map[string]int
+	TotalResponseCounts map[string]int
+	TotalResponseTime   time.Time
 }
 
 func New() *StatsMiddleware {
-	return &StatsMiddleware{
-		Start:             time.Now(),
-		Pid:               os.Getpid(),
-		ResponseCounts:    map[string]int{},
-		TotalResponseTime: time.Time{},
+	stats := &StatsMiddleware{
+		Start:               time.Now(),
+		Pid:                 os.Getpid(),
+		ResponseCounts:      map[string]int{},
+		TotalResponseCounts: map[string]int{},
+		TotalResponseTime:   time.Time{},
 	}
+
+	ticker := time.NewTicker(time.Second)
+	go func() {
+		for _ = range ticker.C {
+			stats.Lock.Lock()
+
+			stats.ResponseCounts = map[string]int{}
+
+			defer stats.Lock.Unlock()
+		}
+	}()
+
+	return stats
 }
 
 type recorderResponseWriter struct {
@@ -68,7 +83,10 @@ func (mw *StatsMiddleware) handleWriter(start time.Time, writer *recorderRespons
 
 	defer mw.Lock.Unlock()
 
-	mw.ResponseCounts[fmt.Sprintf("%d", writer.StatusCode)]++
+	statusCode := fmt.Sprintf("%d", writer.StatusCode)
+
+	mw.ResponseCounts[statusCode]++
+	mw.TotalResponseCounts[statusCode]++
 	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
 }
 
@@ -79,6 +97,7 @@ type Stats struct {
 	Time                   string         `json: "time"`
 	TimeUnix               int64          `json: "unixtime"`
 	StatusCodeCount        map[string]int `json: "status_code_count"`
+	Count                  int            `json: "count"`
 	TotalCount             int            `json: "total_count"`
 	TotalResponseTime      string         `json" "total_response_time`
 	TotalResponseTimeSec   float64        `json: "total_response_time_sec"`
@@ -94,8 +113,13 @@ func (mw *StatsMiddleware) GetStats() *Stats {
 
 	uptime := now.Sub(mw.Start)
 
+	count := 0
+	for _, current := range mw.ResponseCounts {
+		count += current
+	}
+
 	totalCount := 0
-	for _, count := range mw.ResponseCounts {
+	for _, count := range mw.TotalResponseCounts {
 		totalCount += count
 	}
 
@@ -113,7 +137,8 @@ func (mw *StatsMiddleware) GetStats() *Stats {
 		UpTimeSec:              uptime.Seconds(),
 		Time:                   now.String(),
 		TimeUnix:               now.Unix(),
-		StatusCodeCount:        mw.ResponseCounts,
+		StatusCodeCount:        mw.TotalResponseCounts,
+		Count:                  count,
 		TotalCount:             totalCount,
 		TotalResponseTime:      totalResponseTime.String(),
 		TotalResponseTimeSec:   totalResponseTime.Seconds(),
