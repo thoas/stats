@@ -16,7 +16,15 @@ Installation
 
     go get github.com/thoas/stats
 
-5. Run your server:
+
+Usage
+-----
+
+Basic net/http
+..............
+
+To use this handler directly with ``net/http``, you need to call the
+middleware with the handler itself:
 
 .. code-block:: go
 
@@ -33,17 +41,15 @@ Installation
             w.Write([]byte("{\"hello\": \"world\"}"))
         })
 
-        handler = stats.New().Handler(h)
+        handler := stats.New().Handler(h)
         http.ListenAndServe(":8080", handler)
     }
-
-Usage
------
 
 Negroni
 .......
 
-If you are using negroni_ you can implement the handler as a simple middleware:
+If you are using negroni_ you can implement the handler as
+a simple middleware:
 
 .. code-block:: go
 
@@ -81,6 +87,8 @@ If you are using negroni_ you can implement the handler as a simple middleware:
         n.UseHandler(mux)
         n.Run(":3000")
     }
+
+See `examples <https://github.com/thoas/stats/blob/master/examples>`_.
 
 Inspiration
 -----------
