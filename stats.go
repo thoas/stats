@@ -10,7 +10,7 @@ import (
 
 type StatsMiddleware struct {
 	Lock                sync.RWMutex
-	Start               time.Time
+	Uptime              time.Time
 	Pid                 int
 	ResponseCounts      map[string]int
 	TotalResponseCounts map[string]int
@@ -19,7 +19,7 @@ type StatsMiddleware struct {
 
 func New() *StatsMiddleware {
 	stats := &StatsMiddleware{
-		Start:               time.Now(),
+		Uptime:              time.Now(),
 		Pid:                 os.Getpid(),
 		ResponseCounts:      map[string]int{},
 		TotalResponseCounts: map[string]int{},
@@ -56,28 +56,32 @@ func (w *recorderResponseWriter) WriteHeader(code int) {
 // MiddlewareFunc makes StatsMiddleware implement the Middleware interface.
 func (mw *StatsMiddleware) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+		beginning, recorder := mw.Begin(w)
 
-		writer := &recorderResponseWriter{w, 0}
+		h.ServeHTTP(recorder, r)
 
-		h.ServeHTTP(writer, r)
-
-		mw.handleWriter(start, writer)
+		mw.End(beginning, recorder)
 	})
 }
 
 // Negroni compatible interface
 func (mw *StatsMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	beginning, recorder := mw.Begin(w)
+
+	next(recorder, r)
+
+	mw.End(beginning, recorder)
+}
+
+func (mw *StatsMiddleware) Begin(w http.ResponseWriter) (time.Time, *recorderResponseWriter) {
 	start := time.Now()
 
 	writer := &recorderResponseWriter{w, 200}
 
-	next(writer, r)
-
-	mw.handleWriter(start, writer)
+	return start, writer
 }
 
-func (mw *StatsMiddleware) handleWriter(start time.Time, writer *recorderResponseWriter) {
+func (mw *StatsMiddleware) End(start time.Time, writer *recorderResponseWriter) {
 	end := time.Now()
 
 	responseTime := end.Sub(start)
@@ -115,7 +119,7 @@ func (mw *StatsMiddleware) GetStats() *Stats {
 
 	now := time.Now()
 
-	uptime := now.Sub(mw.Start)
+	uptime := now.Sub(mw.Uptime)
 
 	count := 0
 	for _, current := range mw.ResponseCounts {
