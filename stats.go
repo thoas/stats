@@ -1,7 +1,9 @@
 package stats
 
 import (
+	"bufio"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"sync"
@@ -9,7 +11,7 @@ import (
 )
 
 type Stats struct {
-	mu                sync.RWMutex
+	mu                  sync.RWMutex
 	Uptime              time.Time
 	Pid                 int
 	ResponseCounts      map[string]int
@@ -45,12 +47,13 @@ func (mw *Stats) ResetResponseCounts() {
 
 type recorderResponseWriter struct {
 	http.ResponseWriter
-	StatusCode int
+	status int
+	size   int
 }
 
 func (w *recorderResponseWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
-	w.StatusCode = code
+	w.status = code
 }
 
 // MiddlewareFunc makes Stats implement the Middleware interface.
@@ -73,10 +76,46 @@ func (mw *Stats) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Han
 	mw.End(beginning, recorder)
 }
 
+func (rw *recorderResponseWriter) Flush() {
+	flusher, ok := rw.ResponseWriter.(http.Flusher)
+	if ok {
+		flusher.Flush()
+	}
+}
+
+func (rw *recorderResponseWriter) Status() int {
+	return rw.status
+}
+
+// Proxy method to Status to add support for gocraft
+func (rw *recorderResponseWriter) StatusCode() int {
+	return rw.Status()
+}
+
+func (rw *recorderResponseWriter) Size() int {
+	return rw.size
+}
+
+func (rw *recorderResponseWriter) Written() bool {
+	return rw.StatusCode() != 0
+}
+
+func (rw *recorderResponseWriter) CloseNotify() <-chan bool {
+	return rw.ResponseWriter.(http.CloseNotifier).CloseNotify()
+}
+
+func (rw *recorderResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hijacker, ok := rw.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, fmt.Errorf("the ResponseWriter doesn't support the Hijacker interface")
+	}
+	return hijacker.Hijack()
+}
+
 func (mw *Stats) Begin(w http.ResponseWriter) (time.Time, *recorderResponseWriter) {
 	start := time.Now()
 
-	writer := &recorderResponseWriter{w, 200}
+	writer := &recorderResponseWriter{w, 200, 0}
 
 	return start, writer
 }
@@ -90,7 +129,7 @@ func (mw *Stats) End(start time.Time, writer *recorderResponseWriter) {
 
 	defer mw.mu.Unlock()
 
-	statusCode := fmt.Sprintf("%d", writer.StatusCode)
+	statusCode := fmt.Sprintf("%d", writer.Status())
 
 	mw.ResponseCounts[statusCode]++
 	mw.TotalResponseCounts[statusCode]++
