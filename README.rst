@@ -1,6 +1,10 @@
 Go stats handler
 ================
 
+.. image:: https://secure.travis-ci.org/thoas/stats.png?branch=master
+    :alt: Build Status
+    :target: http://travis-ci.org/thoas/stats
+
 stats is a ``net/http`` handler in golang reporting various metrics about
 your web application.
 
