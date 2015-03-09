@@ -11,6 +11,16 @@ your web application.
 This middleware has been developed and required for the need of picfit_,
 an image resizing server written in Go.
 
+Compatibility
+-------------
+
+This handler supports the following frameworks at the moment:
+
+* `negroni`_
+* `martini`_
+* `gocraft/web <https://github.com/gocraft/web>`_
+* `Gin <https://github.com/gin-gonic/gin>`_
+
 Installation
 ------------
 
@@ -179,7 +189,7 @@ Except the following result:
 
 This handler also supports:
 
-* `gocraft <https://github.com/gocraft/web>`_
+* `gocraft/web <https://github.com/gocraft/web>`_
 * `Gin <https://github.com/gin-gonic/gin>`_
 
 
@@ -195,10 +205,7 @@ of this middleware.
 
 Originally developed for `go-json-rest <https://github.com/ant0ine/go-json-rest>`_,
 it had been ported as a simple Golang handler by `Florent Messa <https://github.com/thoas>`_
-to be used in various frameworks:
-
-* `negroni`_
-* `martini`_
+to be used in various frameworks.
 
 This middleware implements a ticker which is launched every seconds to
 reset requests/sec and will implement new features in a near future :)
