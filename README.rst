@@ -4,6 +4,9 @@ Go stats handler
 stats is a ``net/http`` handler in golang reporting various metrics about
 your web application.
 
+This middleware has been developped and required for the need of picfit_,
+an image resizing server written in Go.
+
 Installation
 ------------
 
@@ -189,3 +192,4 @@ Thanks to `Antoine Imbert <https://github.com/ant0ine>`_ for his work.
 .. _go-json-rest: https://github.com/ant0ine/go-json-rest
 .. _negroni: https://github.com/codegangsta/negroni
 .. _martini: https://github.com/go-martini/martini
+.. _picfit: https://github.com/thoas/picfit
