@@ -8,7 +8,7 @@ Go stats handler
 stats is a ``net/http`` handler in golang reporting various metrics about
 your web application.
 
-This middleware has been developped and required for the need of picfit_,
+This middleware has been developed and required for the need of picfit_,
 an image resizing server written in Go.
 
 Installation
