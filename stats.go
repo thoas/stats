@@ -1,9 +1,7 @@
 package stats
 
 import (
-	"bufio"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"sync"
@@ -45,17 +43,6 @@ func (mw *Stats) ResetResponseCounts() {
 	mw.ResponseCounts = map[string]int{}
 }
 
-type recorderResponseWriter struct {
-	http.ResponseWriter
-	status int
-	size   int
-}
-
-func (w *recorderResponseWriter) WriteHeader(code int) {
-	w.ResponseWriter.WriteHeader(code)
-	w.status = code
-}
-
 // MiddlewareFunc makes Stats implement the Middleware interface.
 func (mw *Stats) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,51 +63,15 @@ func (mw *Stats) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Han
 	mw.End(beginning, recorder)
 }
 
-func (rw *recorderResponseWriter) Flush() {
-	flusher, ok := rw.ResponseWriter.(http.Flusher)
-	if ok {
-		flusher.Flush()
-	}
-}
-
-func (rw *recorderResponseWriter) Status() int {
-	return rw.status
-}
-
-// Proxy method to Status to add support for gocraft
-func (rw *recorderResponseWriter) StatusCode() int {
-	return rw.Status()
-}
-
-func (rw *recorderResponseWriter) Size() int {
-	return rw.size
-}
-
-func (rw *recorderResponseWriter) Written() bool {
-	return rw.StatusCode() != 0
-}
-
-func (rw *recorderResponseWriter) CloseNotify() <-chan bool {
-	return rw.ResponseWriter.(http.CloseNotifier).CloseNotify()
-}
-
-func (rw *recorderResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	hijacker, ok := rw.ResponseWriter.(http.Hijacker)
-	if !ok {
-		return nil, nil, fmt.Errorf("the ResponseWriter doesn't support the Hijacker interface")
-	}
-	return hijacker.Hijack()
-}
-
-func (mw *Stats) Begin(w http.ResponseWriter) (time.Time, *recorderResponseWriter) {
+func (mw *Stats) Begin(w http.ResponseWriter) (time.Time, Recorder) {
 	start := time.Now()
 
-	writer := &recorderResponseWriter{w, 200, 0}
+	writer := &RecorderResponseWriter{w, 200, 0}
 
 	return start, writer
 }
 
-func (mw *Stats) End(start time.Time, writer *recorderResponseWriter) {
+func (mw *Stats) EndWithStatus(start time.Time, status int) {
 	end := time.Now()
 
 	responseTime := end.Sub(start)
@@ -129,7 +80,23 @@ func (mw *Stats) End(start time.Time, writer *recorderResponseWriter) {
 
 	defer mw.mu.Unlock()
 
-	statusCode := fmt.Sprintf("%d", writer.Status())
+	statusCode := fmt.Sprintf("%d", status)
+
+	mw.ResponseCounts[statusCode]++
+	mw.TotalResponseCounts[statusCode]++
+	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
+}
+
+func (mw *Stats) End(start time.Time, recorder Recorder) {
+	end := time.Now()
+
+	responseTime := end.Sub(start)
+
+	mw.mu.Lock()
+
+	defer mw.mu.Unlock()
+
+	statusCode := fmt.Sprintf("%d", recorder.Status())
 
 	mw.ResponseCounts[statusCode]++
 	mw.TotalResponseCounts[statusCode]++
