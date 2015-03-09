@@ -75,7 +75,7 @@ a simple middleware in ``server.go``:
         mux.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
             w.Header().Set("Content-Type", "application/json")
 
-            stats := middleware.GetStats()
+            stats := middleware.Data()
 
             b, _ := json.Marshal(stats)
 
@@ -86,6 +86,52 @@ a simple middleware in ``server.go``:
         n.Use(middleware)
         n.UseHandler(mux)
         n.Run(":3000")
+    }
+
+Martini
+.......
+
+If you are using martini_, you can implement the handler as a wrapper of
+a ``Martini.Context`` in ``server.go``:
+
+
+.. code-block:: go
+
+    package main
+
+    import (
+        "encoding/json"
+        "github.com/go-martini/martini"
+        "github.com/thoas/stats"
+        "net/http"
+    )
+
+    func main() {
+        middleware := stats.New()
+
+        m := martini.Classic()
+        m.Get("/", func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("Content-Type", "application/json")
+            w.Write([]byte("{\"hello\": \"world\"}"))
+        })
+        m.Get("/stats", func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("Content-Type", "application/json")
+
+            stats := middleware.Data()
+
+            b, _ := json.Marshal(stats)
+
+            w.Write(b)
+        })
+
+        m.Use(func(c martini.Context, w http.ResponseWriter, r *http.Request) {
+            beginning, recorder := middleware.Begin(w)
+
+            c.Next()
+
+            middleware.End(beginning, recorder)
+        })
+        m.Run()
     }
 
 Run it in a shell:
@@ -130,7 +176,6 @@ See `examples <https://github.com/thoas/stats/blob/master/examples>`_ to
 test them.
 
 
-
 Inspiration
 -----------
 
@@ -143,3 +188,4 @@ Thanks to `Antoine Imbert <https://github.com/ant0ine>`_ for his work.
 .. _StatusMiddleware: https://github.com/ant0ine/go-json-rest/blob/master/rest/status.go
 .. _go-json-rest: https://github.com/ant0ine/go-json-rest
 .. _negroni: https://github.com/codegangsta/negroni
+.. _martini: https://github.com/go-martini/martini

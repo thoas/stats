@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type StatsMiddleware struct {
+type Stats struct {
 	Lock                sync.RWMutex
 	Uptime              time.Time
 	Pid                 int
@@ -17,8 +17,8 @@ type StatsMiddleware struct {
 	TotalResponseTime   time.Time
 }
 
-func New() *StatsMiddleware {
-	stats := &StatsMiddleware{
+func New() *Stats {
+	stats := &Stats{
 		Uptime:              time.Now(),
 		Pid:                 os.Getpid(),
 		ResponseCounts:      map[string]int{},
@@ -37,7 +37,7 @@ func New() *StatsMiddleware {
 	return stats
 }
 
-func (mw *StatsMiddleware) ResetResponseCounts() {
+func (mw *Stats) ResetResponseCounts() {
 	mw.Lock.Lock()
 	defer mw.Lock.Unlock()
 	mw.ResponseCounts = map[string]int{}
@@ -53,8 +53,8 @@ func (w *recorderResponseWriter) WriteHeader(code int) {
 	w.StatusCode = code
 }
 
-// MiddlewareFunc makes StatsMiddleware implement the Middleware interface.
-func (mw *StatsMiddleware) Handler(h http.Handler) http.Handler {
+// MiddlewareFunc makes Stats implement the Middleware interface.
+func (mw *Stats) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		beginning, recorder := mw.Begin(w)
 
@@ -65,7 +65,7 @@ func (mw *StatsMiddleware) Handler(h http.Handler) http.Handler {
 }
 
 // Negroni compatible interface
-func (mw *StatsMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (mw *Stats) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	beginning, recorder := mw.Begin(w)
 
 	next(recorder, r)
@@ -73,7 +73,7 @@ func (mw *StatsMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 	mw.End(beginning, recorder)
 }
 
-func (mw *StatsMiddleware) Begin(w http.ResponseWriter) (time.Time, *recorderResponseWriter) {
+func (mw *Stats) Begin(w http.ResponseWriter) (time.Time, *recorderResponseWriter) {
 	start := time.Now()
 
 	writer := &recorderResponseWriter{w, 200}
@@ -81,7 +81,7 @@ func (mw *StatsMiddleware) Begin(w http.ResponseWriter) (time.Time, *recorderRes
 	return start, writer
 }
 
-func (mw *StatsMiddleware) End(start time.Time, writer *recorderResponseWriter) {
+func (mw *Stats) End(start time.Time, writer *recorderResponseWriter) {
 	end := time.Now()
 
 	responseTime := end.Sub(start)
@@ -97,7 +97,7 @@ func (mw *StatsMiddleware) End(start time.Time, writer *recorderResponseWriter) 
 	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
 }
 
-type Stats struct {
+type data struct {
 	Pid                    int            `json:"pid"`
 	UpTime                 string         `json:"uptime"`
 	UpTimeSec              float64        `json:"uptime_sec"`
@@ -113,7 +113,7 @@ type Stats struct {
 	AverageResponseTimeSec float64        `json:"average_response_time_sec"`
 }
 
-func (mw *StatsMiddleware) GetStats() *Stats {
+func (mw *Stats) Data() *data {
 
 	mw.Lock.RLock()
 
@@ -139,7 +139,7 @@ func (mw *StatsMiddleware) GetStats() *Stats {
 		averageResponseTime = time.Duration(avgNs)
 	}
 
-	stats := &Stats{
+	r := &data{
 		Pid:                    mw.Pid,
 		UpTime:                 uptime.String(),
 		UpTimeSec:              uptime.Seconds(),
@@ -157,5 +157,5 @@ func (mw *StatsMiddleware) GetStats() *Stats {
 
 	mw.Lock.RUnlock()
 
-	return stats
+	return r
 }

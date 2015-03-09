@@ -20,7 +20,7 @@ func main() {
 	mux.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		stats := middleware.GetStats()
+		stats := middleware.Data()
 
 		b, _ := json.Marshal(stats)
 

@@ -31,7 +31,7 @@ func TestGetStats(t *testing.T) {
 
 	var stats = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		stats := s.GetStats()
+		stats := s.Data()
 
 		b, _ := json.Marshal(stats)
 
