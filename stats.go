@@ -9,7 +9,7 @@ import (
 )
 
 type Stats struct {
-	Lock                sync.RWMutex
+	mu                sync.RWMutex
 	Uptime              time.Time
 	Pid                 int
 	ResponseCounts      map[string]int
@@ -38,8 +38,8 @@ func New() *Stats {
 }
 
 func (mw *Stats) ResetResponseCounts() {
-	mw.Lock.Lock()
-	defer mw.Lock.Unlock()
+	mw.mu.Lock()
+	defer mw.mu.Unlock()
 	mw.ResponseCounts = map[string]int{}
 }
 
@@ -86,9 +86,9 @@ func (mw *Stats) End(start time.Time, writer *recorderResponseWriter) {
 
 	responseTime := end.Sub(start)
 
-	mw.Lock.Lock()
+	mw.mu.Lock()
 
-	defer mw.Lock.Unlock()
+	defer mw.mu.Unlock()
 
 	statusCode := fmt.Sprintf("%d", writer.StatusCode)
 
@@ -115,7 +115,7 @@ type data struct {
 
 func (mw *Stats) Data() *data {
 
-	mw.Lock.RLock()
+	mw.mu.RLock()
 
 	now := time.Now()
 
@@ -155,7 +155,7 @@ func (mw *Stats) Data() *data {
 		AverageResponseTimeSec: averageResponseTime.Seconds(),
 	}
 
-	mw.Lock.RUnlock()
+	mw.mu.RUnlock()
 
 	return r
 }
