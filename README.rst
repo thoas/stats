@@ -186,10 +186,18 @@ test them.
 Inspiration
 -----------
 
-This reusable handler comes from a complete rip off of the great StatusMiddleware_
-which is located in the `go-json-rest`_ repository.
+`Antoine Imbert <https://github.com/ant0ine>`_ is the original author
+of this middleware.
 
-Thanks to `Antoine Imbert <https://github.com/ant0ine>`_ for his work.
+Originally developed for `go-json-rest <https://github.com/ant0ine/go-json-rest>`_,
+it had been ported as a simple Golang handler by `Florent Messa <https://github.com/thoas>`_
+to be used in various frameworks:
+
+* `negroni`_
+* `martini`_
+
+This middleware implements a ticker which is launched every seconds to
+reset requests/sec and will implement new features in a near future :)
 
 .. _GOPATH: http://golang.org/doc/code.html#GOPATH
 .. _StatusMiddleware: https://github.com/ant0ine/go-json-rest/blob/master/rest/status.go
