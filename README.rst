@@ -177,6 +177,10 @@ Except the following result:
         "uptime_sec": 254.502271612
     }
 
+This handler also supports:
+
+* `gocraft <https://github.com/gocraft/web>`_
+* `Gin <https://github.com/gin-gonic/gin>`_
 
 
 See `examples <https://github.com/thoas/stats/blob/master/examples>`_ to
