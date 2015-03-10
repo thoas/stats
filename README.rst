@@ -20,6 +20,7 @@ This handler supports the following frameworks at the moment:
 * `martini`_
 * `gocraft/web <https://github.com/gocraft/web>`_
 * `Gin <https://github.com/gin-gonic/gin>`_
+* `Goji <https://github.com/zenazn/goji>`_
 
 We don't support your favorite Go framework? Send me a PR or
 create a new `issue <https://github.com/thoas/stats/issues>`_ and
