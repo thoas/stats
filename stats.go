@@ -88,19 +88,7 @@ func (mw *Stats) EndWithStatus(start time.Time, status int) {
 }
 
 func (mw *Stats) End(start time.Time, recorder Recorder) {
-	end := time.Now()
-
-	responseTime := end.Sub(start)
-
-	mw.mu.Lock()
-
-	defer mw.mu.Unlock()
-
-	statusCode := fmt.Sprintf("%d", recorder.Status())
-
-	mw.ResponseCounts[statusCode]++
-	mw.TotalResponseCounts[statusCode]++
-	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
+	mw.EndWithStatus(start, recorder.Status())
 }
 
 type data struct {
