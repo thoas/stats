@@ -21,6 +21,7 @@ This handler supports the following frameworks at the moment:
 * `gocraft/web <https://github.com/gocraft/web>`_
 * `Gin <https://github.com/gin-gonic/gin>`_
 * `Goji <https://github.com/zenazn/goji>`_
+* `Beego <https://github.com/astaxie/beego>`_
 
 We don't support your favorite Go framework? Send me a PR or
 create a new `issue <https://github.com/thoas/stats/issues>`_ and
@@ -191,12 +192,6 @@ Except the following result:
         "uptime": "4m14.502271612s",
         "uptime_sec": 254.502271612
     }
-
-This handler also supports:
-
-* `gocraft/web <https://github.com/gocraft/web>`_
-* `Gin <https://github.com/gin-gonic/gin>`_
-
 
 See `examples <https://github.com/thoas/stats/blob/master/examples>`_ to
 test them.
