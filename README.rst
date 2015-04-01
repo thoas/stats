@@ -22,6 +22,7 @@ This handler supports the following frameworks at the moment:
 * `Gin <https://github.com/gin-gonic/gin>`_
 * `Goji <https://github.com/zenazn/goji>`_
 * `Beego <https://github.com/astaxie/beego>`_
+* `HTTPRouter <https://github.com/julienschmidt/httprouter>`_
 
 We don't support your favorite Go framework? Send me a PR or
 create a new `issue <https://github.com/thoas/stats/issues>`_ and
@@ -111,6 +112,39 @@ a simple middleware in ``server.go``:
         n.Run(":3000")
     }
 
+HTTPRouter
+.......
+
+If you are using HTTPRouter_ you need to call the middleware with the handler itself:
+
+.. _HTTPRouter: https://github.com/julienschmidt/httprouter/
+
+.. code-block:: go
+    
+    package main                                                                          
+
+    import (
+            "encoding/json"
+            "github.com/julienschmidt/httprouter"
+            "github.com/thoas/stats"
+            "net/http"
+    )
+    
+    func main() {
+            router := httprouter.New()
+            s := stats.New()
+            router.GET("/stats", func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+                    w.Header().Set("Content-Type", "application/json; charset=utf-8")
+                    s, err := json.Marshal(s.Data())
+                    if err != nil {
+                            http.Error(w, err.Error(), http.StatusInternalServerError)
+                    }
+                    w.Write(s)
+            })
+            http.ListenAndServe(":8080", s.Handler(router))
+    }
+    
+    
 Martini
 .......
 
