@@ -117,8 +117,6 @@ HTTPRouter
 
 If you are using HTTPRouter_ you need to call the middleware with the handler itself:
 
-.. _HTTPRouter: https://github.com/julienschmidt/httprouter/
-
 .. code-block:: go
     
     package main                                                                          
@@ -250,3 +248,4 @@ reset requests/sec and will implement new features in a near future :)
 .. _negroni: https://github.com/codegangsta/negroni
 .. _martini: https://github.com/go-martini/martini
 .. _picfit: https://github.com/thoas/picfit
+.. _HTTPRouter: https://github.com/julienschmidt/httprouter
