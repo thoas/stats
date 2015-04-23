@@ -58,5 +58,5 @@ func TestGetStats(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	assert.Equal(t, data["total_count"].(float64), 1)
+	assert.Equal(t, data["total_count"].(float64), float64(1))
 }
