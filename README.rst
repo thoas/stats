@@ -201,7 +201,7 @@ Then in another shell run:
 
     $ curl http://localhost:3000/stats | python -m "json.tool"
 
-Except the following result:
+Expect the following result:
 
 .. code-block:: json
 
