@@ -63,10 +63,10 @@ func (mw *Stats) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Han
 	mw.End(beginning, recorder)
 }
 
-func (mw *Stats) Begin(w http.ResponseWriter) (time.Time, Recorder) {
+func (mw *Stats) Begin(w http.ResponseWriter) (time.Time, ResponseWriter) {
 	start := time.Now()
 
-	writer := &RecorderResponseWriter{w, 200, 0}
+	writer := NewRecorderResponseWriter(w, 200)
 
 	return start, writer
 }
@@ -87,7 +87,7 @@ func (mw *Stats) EndWithStatus(start time.Time, status int) {
 	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
 }
 
-func (mw *Stats) End(start time.Time, recorder Recorder) {
+func (mw *Stats) End(start time.Time, recorder ResponseWriter) {
 	mw.EndWithStatus(start, recorder.Status())
 }
 

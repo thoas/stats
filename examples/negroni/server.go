@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/codegangsta/negroni"
 	"github.com/thoas/stats"
-	"net/http"
 )
 
 func main() {
