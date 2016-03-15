@@ -2,10 +2,11 @@ package stats
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var testHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +38,7 @@ func TestGetStats(t *testing.T) {
 
 		w.Write(b)
 		w.WriteHeader(200)
-		w.Header().Add("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json")
 	})
 
 	res := httptest.NewRecorder()
