@@ -8,21 +8,23 @@ import (
 	"time"
 )
 
+// Stats data structure
 type Stats struct {
 	mu                  sync.RWMutex
 	Uptime              time.Time
 	Pid                 int
-	ResponseCounts      map[string]int
-	TotalResponseCounts map[string]int
+	responseCounts      map[string]int
+	totalResponseCounts map[string]int
 	TotalResponseTime   time.Time
 }
 
+// New construct a new Stats structure
 func New() *Stats {
 	stats := &Stats{
 		Uptime:              time.Now(),
 		Pid:                 os.Getpid(),
-		ResponseCounts:      map[string]int{},
-		TotalResponseCounts: map[string]int{},
+		responseCounts:      map[string]int{},
+		totalResponseCounts: map[string]int{},
 		TotalResponseTime:   time.Time{},
 	}
 
@@ -37,13 +39,28 @@ func New() *Stats {
 	return stats
 }
 
+// ResetResponseCounts reset the response counts
 func (mw *Stats) ResetResponseCounts() {
 	mw.mu.Lock()
 	defer mw.mu.Unlock()
-	mw.ResponseCounts = map[string]int{}
+	mw.responseCounts = map[string]int{}
 }
 
-// MiddlewareFunc makes Stats implement the Middleware interface.
+// ResponseCounts returns the response counts
+func (mw *Stats) ResponseCounts() map[string]int {
+	mw.mu.RLock()
+	defer mw.mu.RUnlock()
+	return mw.responseCounts
+}
+
+// TotalResponseCounts returns the total response counts
+func (mw *Stats) TotalResponseCounts() map[string]int {
+	mw.mu.RLock()
+	defer mw.mu.RUnlock()
+	return mw.totalResponseCounts
+}
+
+// Handler is a MiddlewareFunc makes Stats implement the Middleware interface.
 func (mw *Stats) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		beginning, recorder := mw.Begin(w)
@@ -63,6 +80,7 @@ func (mw *Stats) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Han
 	mw.End(beginning, recorder)
 }
 
+// Begin starts a recorder
 func (mw *Stats) Begin(w http.ResponseWriter) (time.Time, ResponseWriter) {
 	start := time.Now()
 
@@ -71,6 +89,7 @@ func (mw *Stats) Begin(w http.ResponseWriter) (time.Time, ResponseWriter) {
 	return start, writer
 }
 
+// EndWithStatus closes the recorder with a specific status
 func (mw *Stats) EndWithStatus(start time.Time, status int) {
 	end := time.Now()
 
@@ -82,16 +101,18 @@ func (mw *Stats) EndWithStatus(start time.Time, status int) {
 
 	statusCode := fmt.Sprintf("%d", status)
 
-	mw.ResponseCounts[statusCode]++
-	mw.TotalResponseCounts[statusCode]++
+	mw.responseCounts[statusCode]++
+	mw.totalResponseCounts[statusCode]++
 	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
 }
 
+// End closes the recorder with the recorder status
 func (mw *Stats) End(start time.Time, recorder ResponseWriter) {
 	mw.EndWithStatus(start, recorder.Status())
 }
 
-type data struct {
+// Data serializable structure
+type Data struct {
 	Pid                    int            `json:"pid"`
 	UpTime                 string         `json:"uptime"`
 	UpTimeSec              float64        `json:"uptime_sec"`
@@ -107,8 +128,8 @@ type data struct {
 	AverageResponseTimeSec float64        `json:"average_response_time_sec"`
 }
 
-func (mw *Stats) Data() *data {
-
+// Data returns the data serializable structure
+func (mw *Stats) Data() *Data {
 	mw.mu.RLock()
 
 	now := time.Now()
@@ -116,12 +137,12 @@ func (mw *Stats) Data() *data {
 	uptime := now.Sub(mw.Uptime)
 
 	count := 0
-	for _, current := range mw.ResponseCounts {
+	for _, current := range mw.ResponseCounts() {
 		count += current
 	}
 
 	totalCount := 0
-	for _, count := range mw.TotalResponseCounts {
+	for _, count := range mw.TotalResponseCounts() {
 		totalCount += count
 	}
 
@@ -133,14 +154,14 @@ func (mw *Stats) Data() *data {
 		averageResponseTime = time.Duration(avgNs)
 	}
 
-	r := &data{
+	r := &Data{
 		Pid:                    mw.Pid,
 		UpTime:                 uptime.String(),
 		UpTimeSec:              uptime.Seconds(),
 		Time:                   now.String(),
 		TimeUnix:               now.Unix(),
-		StatusCodeCount:        mw.ResponseCounts,
-		TotalStatusCodeCount:   mw.TotalResponseCounts,
+		StatusCodeCount:        mw.ResponseCounts(),
+		TotalStatusCodeCount:   mw.TotalResponseCounts(),
 		Count:                  count,
 		TotalCount:             totalCount,
 		TotalResponseTime:      totalResponseTime.String(),
