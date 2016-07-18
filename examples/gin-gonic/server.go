@@ -4,9 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/stats"
 	"net/http"
-	"time"
 )
 
+// Stats provides response time, status code count, etc.
 var Stats = stats.New()
 
 func main() {
@@ -14,11 +14,9 @@ func main() {
 
 	r.Use(func() gin.HandlerFunc {
 		return func(c *gin.Context) {
-			beginning := time.Now()
-
+			beginning, recorder := Stats.Begin(c.Writer)
 			c.Next()
-
-			Stats.End(beginning, c.Writer)
+			Stats.End(beginning, recorder)
 		}
 	}())
 
