@@ -25,7 +25,7 @@ func TestSimple(t *testing.T) {
 	s.Handler(testHandler).ServeHTTP(res, req)
 
 	assert.Equal(t, res.Code, 200)
-	assert.Equal(t, s.ResponseCounts(), map[string]int{"200": 1})
+	assert.Equal(t, s.ResponseCounts, map[string]int{"200": 1})
 }
 
 func TestGetStats(t *testing.T) {
