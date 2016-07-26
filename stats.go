@@ -13,18 +13,18 @@ type Stats struct {
 	mu                  sync.RWMutex
 	Uptime              time.Time
 	Pid                 int
-	responseCounts      map[string]int
-	totalResponseCounts map[string]int
+	ResponseCounts      map[string]int
+	TotalResponseCounts map[string]int
 	TotalResponseTime   time.Time
 }
 
-// New construct a new Stats structure
+// New constructs a new Stats structure
 func New() *Stats {
 	stats := &Stats{
 		Uptime:              time.Now(),
 		Pid:                 os.Getpid(),
-		responseCounts:      map[string]int{},
-		totalResponseCounts: map[string]int{},
+		ResponseCounts:      map[string]int{},
+		TotalResponseCounts: map[string]int{},
 		TotalResponseTime:   time.Time{},
 	}
 
@@ -43,21 +43,7 @@ func New() *Stats {
 func (mw *Stats) ResetResponseCounts() {
 	mw.mu.Lock()
 	defer mw.mu.Unlock()
-	mw.responseCounts = map[string]int{}
-}
-
-// ResponseCounts returns the response counts
-func (mw *Stats) ResponseCounts() map[string]int {
-	mw.mu.RLock()
-	defer mw.mu.RUnlock()
-	return mw.responseCounts
-}
-
-// TotalResponseCounts returns the total response counts
-func (mw *Stats) TotalResponseCounts() map[string]int {
-	mw.mu.RLock()
-	defer mw.mu.RUnlock()
-	return mw.totalResponseCounts
+	mw.ResponseCounts = map[string]int{}
 }
 
 // Handler is a MiddlewareFunc makes Stats implement the Middleware interface.
@@ -101,8 +87,8 @@ func (mw *Stats) EndWithStatus(start time.Time, status int) {
 
 	statusCode := fmt.Sprintf("%d", status)
 
-	mw.responseCounts[statusCode]++
-	mw.totalResponseCounts[statusCode]++
+	mw.ResponseCounts[statusCode]++
+	mw.TotalResponseCounts[statusCode]++
 	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
 }
 
@@ -130,19 +116,25 @@ type Data struct {
 
 // Data returns the data serializable structure
 func (mw *Stats) Data() *Data {
+
 	mw.mu.RLock()
+
+	responseCounts := make(map[string]int, len(mw.ResponseCounts))
+	totalResponseCounts := make(map[string]int, len(mw.TotalResponseCounts))
 
 	now := time.Now()
 
 	uptime := now.Sub(mw.Uptime)
 
 	count := 0
-	for _, current := range mw.ResponseCounts() {
+	for code, current := range mw.ResponseCounts {
+		responseCounts[code] = current
 		count += current
 	}
 
 	totalCount := 0
-	for _, count := range mw.TotalResponseCounts() {
+	for code, count := range mw.TotalResponseCounts {
+		totalResponseCounts[code] = count
 		totalCount += count
 	}
 
@@ -154,14 +146,16 @@ func (mw *Stats) Data() *Data {
 		averageResponseTime = time.Duration(avgNs)
 	}
 
+	mw.mu.RUnlock()
+
 	r := &Data{
 		Pid:                    mw.Pid,
 		UpTime:                 uptime.String(),
 		UpTimeSec:              uptime.Seconds(),
 		Time:                   now.String(),
 		TimeUnix:               now.Unix(),
-		StatusCodeCount:        mw.ResponseCounts(),
-		TotalStatusCodeCount:   mw.TotalResponseCounts(),
+		StatusCodeCount:        responseCounts,
+		TotalStatusCodeCount:   totalResponseCounts,
 		Count:                  count,
 		TotalCount:             totalCount,
 		TotalResponseTime:      totalResponseTime.String(),
@@ -169,8 +163,6 @@ func (mw *Stats) Data() *Data {
 		AverageResponseTime:    averageResponseTime.String(),
 		AverageResponseTimeSec: averageResponseTime.Seconds(),
 	}
-
-	mw.mu.RUnlock()
 
 	return r
 }
