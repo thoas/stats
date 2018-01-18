@@ -17,6 +17,7 @@ type Stats struct {
 	ResponseCounts      map[string]int
 	TotalResponseCounts map[string]int
 	TotalResponseTime   time.Time
+	TotalResponseSize   int64
 }
 
 // New constructs a new Stats structure
@@ -28,6 +29,7 @@ func New() *Stats {
 		ResponseCounts:      map[string]int{},
 		TotalResponseCounts: map[string]int{},
 		TotalResponseTime:   time.Time{},
+		TotalResponseSize:   0,
 	}
 
 	go func() {
@@ -87,10 +89,8 @@ func (mw *Stats) Begin(w http.ResponseWriter) (time.Time, ResponseWriter) {
 }
 
 // EndWithStatus closes the recorder with a specific status
-func (mw *Stats) EndWithStatus(start time.Time, status int) {
-	end := time.Now()
-
-	responseTime := end.Sub(start)
+func (mw *Stats) EndWithStatus(start time.Time, size int, status int) {
+	responseTime := time.Since(start)
 
 	mw.mu.Lock()
 
@@ -101,11 +101,12 @@ func (mw *Stats) EndWithStatus(start time.Time, status int) {
 	mw.ResponseCounts[statusCode]++
 	mw.TotalResponseCounts[statusCode]++
 	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
+	mw.TotalResponseSize += int64(size)
 }
 
 // End closes the recorder with the recorder status
 func (mw *Stats) End(start time.Time, recorder ResponseWriter) {
-	mw.EndWithStatus(start, recorder.Status())
+	mw.EndWithStatus(start, recorder.Size(), recorder.Status())
 }
 
 // Data serializable structure
@@ -121,6 +122,8 @@ type Data struct {
 	TotalCount             int            `json:"total_count"`
 	TotalResponseTime      string         `json:"total_response_time"`
 	TotalResponseTimeSec   float64        `json:"total_response_time_sec"`
+	TotalResponseSize      int64          `json:"total_response_size"`
+	AverageResponseSize    int64          `json:"average_response_size"`
 	AverageResponseTime    string         `json:"average_response_time"`
 	AverageResponseTimeSec float64        `json:"average_response_time_sec"`
 }
@@ -150,11 +153,14 @@ func (mw *Stats) Data() *Data {
 	}
 
 	totalResponseTime := mw.TotalResponseTime.Sub(time.Time{})
+	totalResponseSize := mw.TotalResponseSize
 
 	averageResponseTime := time.Duration(0)
+	averageResponseSize := int64(0)
 	if totalCount > 0 {
 		avgNs := int64(totalResponseTime) / int64(totalCount)
 		averageResponseTime = time.Duration(avgNs)
+		averageResponseSize = int64(totalResponseSize) / int64(totalCount)
 	}
 
 	mw.mu.RUnlock()
@@ -170,7 +176,9 @@ func (mw *Stats) Data() *Data {
 		Count:                  count,
 		TotalCount:             totalCount,
 		TotalResponseTime:      totalResponseTime.String(),
+		TotalResponseSize:      totalResponseSize,
 		TotalResponseTimeSec:   totalResponseTime.Seconds(),
+		AverageResponseSize:    averageResponseSize,
 		AverageResponseTime:    averageResponseTime.String(),
 		AverageResponseTimeSec: averageResponseTime.Seconds(),
 	}
