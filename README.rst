@@ -1,7 +1,7 @@
 Go stats handler
 ================
 
-.. image:: https://secure.travis-ci.org/thoas/stats.png?branch=master
+.. image:: https://secure.travis-ci.org/thoas/stats.svg?branch=master
     :alt: Build Status
     :target: http://travis-ci.org/thoas/stats
 
