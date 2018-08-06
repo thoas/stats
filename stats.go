@@ -11,6 +11,7 @@ import (
 // Stats data structure
 type Stats struct {
 	mu                  sync.RWMutex
+	closed              chan struct{}
 	Uptime              time.Time
 	Pid                 int
 	ResponseCounts      map[string]int
@@ -21,6 +22,7 @@ type Stats struct {
 // New constructs a new Stats structure
 func New() *Stats {
 	stats := &Stats{
+		closed:              make(chan struct{}, 1),
 		Uptime:              time.Now(),
 		Pid:                 os.Getpid(),
 		ResponseCounts:      map[string]int{},
@@ -30,13 +32,22 @@ func New() *Stats {
 
 	go func() {
 		for {
-			stats.ResetResponseCounts()
+			select {
+			case <-stats.closed:
+				return
+			default:
+				stats.ResetResponseCounts()
 
-			time.Sleep(time.Second * 1)
+				time.Sleep(time.Second * 1)
+			}
 		}
 	}()
 
 	return stats
+}
+
+func (mw *Stats) Close() {
+	close(mw.closed)
 }
 
 // ResetResponseCounts reset the response counts
