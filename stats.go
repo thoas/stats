@@ -11,8 +11,8 @@ import (
 // Stats data structure
 type Stats struct {
 	mu                  sync.RWMutex
-    closed              chan struct{}
-    Hostname            string
+	closed              chan struct{}
+	Hostname            string
 	Uptime              time.Time
 	Pid                 int
 	ResponseCounts      map[string]int
