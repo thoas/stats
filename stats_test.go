@@ -76,7 +76,7 @@ func TestRace(t *testing.T) {
 			case _ = <-ch1:
 				return
 			default:
-				s.EndWithStatus(now, 200)
+				s.EndWithStatus(now, 10, 200)
 
 			}
 		}
