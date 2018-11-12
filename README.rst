@@ -184,7 +184,7 @@ a ``Martini.Context`` in ``server.go``:
 
             c.Next()
 
-            middleware.End(beginning, recorder)
+            middleware.End(beginning, stats.WithRecorder(recorder))
         })
         m.Run()
     }

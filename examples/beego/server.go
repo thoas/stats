@@ -1,10 +1,11 @@
 package main
 
 import (
+	"time"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/thoas/stats"
-	"time"
 )
 
 var Stats = stats.New()
@@ -25,7 +26,7 @@ func main() {
 		ctx.Input.SetData("stats_timer", startTime)
 	})
 	beego.InsertFilter("*", beego.FinishRouter, func(ctx *context.Context) {
-		Stats.EndWithStatus(ctx.Input.GetData("stats_timer").(time.Time), ctx.Output.Status)
+		Stats.End(ctx.Input.GetData("stats_timer").(time.Time), stats.WithStatusCode(ctx.Output.Status))
 	})
 
 	beego.Router("/stats", &StatsController{})

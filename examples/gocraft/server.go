@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/gocraft/web"
 	"github.com/thoas/stats"
-	"net/http"
 )
 
 var Stats = stats.New()
@@ -32,7 +33,7 @@ func (c *Context) Recording(rw web.ResponseWriter, req *web.Request, next web.Ne
 
 	next(recorder, req)
 
-	Stats.End(beginning, recorder)
+	Stats.End(beginning, stats.WithRecorder(recorder))
 }
 
 func main() {

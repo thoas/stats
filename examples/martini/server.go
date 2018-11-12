@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/go-martini/martini"
 	"github.com/thoas/stats"
-	"net/http"
 )
 
 func main() {
@@ -30,7 +31,7 @@ func main() {
 
 		c.Next()
 
-		middleware.End(beginning, recorder)
+		middleware.End(beginning, stats.WithRecorder(recorder))
 	})
 	m.Run()
 }

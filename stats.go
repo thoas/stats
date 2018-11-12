@@ -64,7 +64,7 @@ func (mw *Stats) Handler(h http.Handler) http.Handler {
 
 		h.ServeHTTP(recorder, r)
 
-		mw.End(beginning, recorder)
+		mw.End(beginning, WithRecorder(recorder))
 	})
 }
 
@@ -74,7 +74,7 @@ func (mw *Stats) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Han
 
 	next(recorder, r)
 
-	mw.End(beginning, recorder)
+	mw.End(beginning, WithRecorder(recorder))
 }
 
 // Begin starts a recorder
@@ -86,8 +86,10 @@ func (mw *Stats) Begin(w http.ResponseWriter) (time.Time, ResponseWriter) {
 	return start, writer
 }
 
-// EndWithStatus closes the recorder with a specific status
-func (mw *Stats) EndWithStatus(start time.Time, status int) {
+// End closes the recorder with a specific status
+func (mw *Stats) End(start time.Time, opts ...Option) {
+	options := newOptions(opts...)
+
 	end := time.Now()
 
 	responseTime := end.Sub(start)
@@ -96,16 +98,11 @@ func (mw *Stats) EndWithStatus(start time.Time, status int) {
 
 	defer mw.mu.Unlock()
 
-	statusCode := fmt.Sprintf("%d", status)
+	statusCode := fmt.Sprintf("%d", options.StatusCode())
 
 	mw.ResponseCounts[statusCode]++
 	mw.TotalResponseCounts[statusCode]++
 	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
-}
-
-// End closes the recorder with the recorder status
-func (mw *Stats) End(start time.Time, recorder ResponseWriter) {
-	mw.EndWithStatus(start, recorder.Status())
 }
 
 // Data serializable structure

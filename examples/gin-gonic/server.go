@@ -1,9 +1,10 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/stats"
-	"net/http"
 )
 
 // Stats provides response time, status code count, etc.
@@ -16,7 +17,7 @@ func main() {
 		return func(c *gin.Context) {
 			beginning, recorder := Stats.Begin(c.Writer)
 			c.Next()
-			Stats.End(beginning, recorder)
+			Stats.End(beginning, stats.WithRecorder(recorder))
 		}
 	}())
 
