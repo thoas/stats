@@ -3,15 +3,26 @@ package stats
 // Options are stats options.
 type Options struct {
 	statusCode *int
+	size       int
 	recorder   ResponseWriter
 }
 
+// StatusCode returns the response status code.
 func (o Options) StatusCode() int {
 	if o.recorder != nil {
 		return o.recorder.Status()
 	}
 
 	return *o.statusCode
+}
+
+// Size returns the response size.
+func (o Options) Size() int {
+	if o.recorder != nil {
+		return o.recorder.Size()
+	}
+
+	return o.size
 }
 
 // Option represents a stats option.
@@ -21,6 +32,13 @@ type Option func(*Options)
 func WithStatusCode(statusCode int) Option {
 	return func(o *Options) {
 		o.statusCode = &statusCode
+	}
+}
+
+// WithSize sets the size to use in stats.
+func WithSize(size int) Option {
+	return func(o *Options) {
+		o.size = size
 	}
 }
 
