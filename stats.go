@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -77,7 +78,9 @@ func (mw *Stats) Handler(h http.Handler) http.Handler {
 
 		h.ServeHTTP(recorder, r)
 
-		mw.End(beginning, WithRecorder(recorder))
+		// if the request is web socket, do not count in response time
+		save := !isWebsocketRequest(r)
+		mw.End(beginning, WithRecorder(recorder), WithSaveResult(save))
 	})
 }
 
@@ -87,7 +90,8 @@ func (mw *Stats) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Han
 
 	next(recorder, r)
 
-	mw.End(beginning, WithRecorder(recorder))
+	save := !isWebsocketRequest(r)
+	mw.End(beginning, WithRecorder(recorder), WithSaveResult(save))
 }
 
 // Begin starts a recorder
@@ -111,10 +115,26 @@ func (mw *Stats) End(start time.Time, opts ...Option) {
 
 	statusCode := fmt.Sprintf("%d", options.StatusCode())
 
-	mw.ResponseCounts[statusCode]++
-	mw.TotalResponseCounts[statusCode]++
-	mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
-	mw.TotalResponseSize += int64(options.Size())
+	if options.saveResult {
+		mw.ResponseCounts[statusCode]++
+		mw.TotalResponseCounts[statusCode]++
+		mw.TotalResponseTime = mw.TotalResponseTime.Add(responseTime)
+		mw.TotalResponseSize += int64(options.Size())
+	}
+}
+
+func isWebsocketRequest(req *http.Request) bool {
+	return containsHeader(req, "Connection", "upgrade") && containsHeader(req, "Upgrade", "websocket")
+}
+
+func containsHeader(req *http.Request, name, value string) bool {
+	items := strings.Split(req.Header.Get(name), ",")
+	for _, item := range items {
+		if value == strings.ToLower(strings.TrimSpace(item)) {
+			return true
+		}
+	}
+	return false
 }
 
 // MeasureSince method for execution time recording
