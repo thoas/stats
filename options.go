@@ -5,6 +5,7 @@ type Options struct {
 	statusCode *int
 	size       int
 	recorder   ResponseWriter
+	saveResult bool
 }
 
 // StatusCode returns the response status code.
@@ -46,6 +47,13 @@ func WithSize(size int) Option {
 func WithRecorder(recorder ResponseWriter) Option {
 	return func(o *Options) {
 		o.recorder = recorder
+	}
+}
+
+// WithRecorder sets the recorder to use in stats.
+func WithSaveResult(save bool) Option {
+	return func(o *Options) {
+		o.saveResult = save
 	}
 }
 
