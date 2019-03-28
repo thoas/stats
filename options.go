@@ -50,7 +50,7 @@ func WithRecorder(recorder ResponseWriter) Option {
 	}
 }
 
-// WithRecorder sets the recorder to use in stats.
+// WithSaveResult: sets the recorder to use in stats.
 func WithSaveResult(save bool) Option {
 	return func(o *Options) {
 		o.saveResult = save

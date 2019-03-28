@@ -60,7 +60,7 @@ func (r *recorderResponseWriter) Write(b []byte) (int, error) {
 	return size, err
 }
 
-// Proxy method to Status to add support for gocraft
+// StatusCode: Proxy method to Status to add support for gocraft
 func (r *recorderResponseWriter) StatusCode() int {
 	return r.Status()
 }
