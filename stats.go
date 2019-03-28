@@ -81,7 +81,7 @@ func (mw *Stats) Handler(h http.Handler) http.Handler {
 	})
 }
 
-// Negroni compatible interface
+// ServeHTTP: Negroni compatible interface
 func (mw *Stats) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	beginning, recorder := mw.Begin(w)
 
