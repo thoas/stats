@@ -120,10 +120,11 @@ If you are using echo_ you can implement the handler as
 a simple middleware in ``server.go``:
 
 .. code-block:: go
+
     package main
 
     import (
-	    "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4"
         "github.com/thoas/stats"
         "net/http"
     )
@@ -153,6 +154,7 @@ a simple middleware in ``server.go``:
 
         r.Start("0.0.0.0:8080")
     }
+
 
 HTTPRouter
 .......
