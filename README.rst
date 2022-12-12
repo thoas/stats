@@ -20,6 +20,7 @@ This handler supports the following frameworks at the moment:
 * `martini`_
 * `gocraft/web <https://github.com/gocraft/web>`_
 * `Gin <https://github.com/gin-gonic/gin>`_
+* `echo <https://github.com/labstack/echo>`_
 * `Goji <https://github.com/zenazn/goji>`_
 * `Beego <https://github.com/astaxie/beego>`_
 * `HTTPRouter <https://github.com/julienschmidt/httprouter>`_
@@ -111,6 +112,49 @@ a simple middleware in ``server.go``:
         n.UseHandler(mux)
         n.Run(":3000")
     }
+
+echo
+.......
+
+If you are using echo_ you can implement the handler as
+a simple middleware in ``server.go``:
+
+.. code-block:: go
+
+    package main
+
+    import (
+	"github.com/labstack/echo/v4"
+        "github.com/thoas/stats"
+        "net/http"
+    )
+
+    // Stats provides response time, status code count, etc.
+    var Stats = stats.New()
+
+    func main() {
+        r := echo.New()
+
+        r.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+            return func(ctx echo.Context) error {
+                beginning, recorder := Stats.Begin(ctx.Response().Writer)
+                err := next(ctx)
+                Stats.End(beginning, stats.WithRecorder(recorder))
+                return err
+            }
+        })
+
+        r.GET("/stats", func(ctx echo.Context) error {
+            return ctx.JSON(http.StatusOK, Stats.Data())
+        })
+
+        r.GET("/", func(ctx echo.Context) error {
+            return ctx.JSON(http.StatusOK, map[string]string{"hello": "world"})
+        })
+
+        r.Start("0.0.0.0:8080")
+    }
+
 
 HTTPRouter
 .......
